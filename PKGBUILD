@@ -1,6 +1,6 @@
 pkgname=hsa-rocr
-pkgver=6.4.4
-pkgrel=1
+pkgver=7.0.1
+pkgrel=2
 pkgdesc="HSA Runtime API and runtime for ROCm"
 arch=('x86_64')
 url="https://github.com/ROCm/ROCR-Runtime"
@@ -21,16 +21,8 @@ makedepends=(
     'rocm-llvm'
 )
 options=('!lto')
-source=(https://github.com/ROCm/ROCR-Runtime/archive/rocm-${pkgver}/ROCR-Runtime-rocm-${pkgver}.tar.gz
-    hsa-rocr-6.4-fix-missing-include.patch)
-sha256sums=(bbc71e7f932ed218eca51a6ce9e437bb6c3118534d5be69bb957441bc3092a49
-    6b7c62245fd9021ade8046e6a769e48c8c1868131dbac19531befc5f2a4c25b5)
-
-prepare() {
-    cd ROCR-Runtime-rocm-${pkgver}
-
-    patch -Np1 < ${srcdir}/hsa-rocr-6.4-fix-missing-include.patch
-}
+source=(https://github.com/ROCm/ROCR-Runtime/archive/rocm-${pkgver}/ROCR-Runtime-rocm-${pkgver}.tar.gz)
+sha256sums=(f2004b98683a5b8e25d70034baee0f37a3b24dc1d4737b1c07b7830f4c10189d)
 
 build() {
     cd ROCR-Runtime-rocm-${pkgver}
@@ -42,10 +34,14 @@ build() {
         -D CMAKE_BUILD_TYPE=Release
         -D CMAKE_INSTALL_PREFIX=/usr
         -D CMAKE_INSTALL_LIBDIR=lib64
-        -D CMAKE_CXX_FLAGS="$CXXFLAGS -DNDEBUG"
         -D BUILD_SHARED_LIBS=ON
+        -D CMAKE_SHARED_LINKER_FLAGS=-ldrm_amdgpu
+        -D INCLUDE_PATH_COMPATIBILITY=OFF
         -W no-dev
     )
+
+    export CMAKE_PREFIX_PATH=/usr/lib64/rocm/llvm
+    export HIP_DEVICE_LIB_PATH=/usr/lib64/amdgcn/bitcode
 
     cmake "${cmake_args[@]}"
 
